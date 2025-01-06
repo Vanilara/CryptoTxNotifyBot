@@ -39,14 +39,14 @@ TOKEN = Telegram Bot API token.
 ## Installation
 * Dev:
 ```bash
-docker-compose up --profile dev --build #pgadmin + postgres
+docker-compose up --profile dev --build #postgres, pgadmin
 poetry install && poetry shell
 python3 bot.py
 uvicorn main:app --debug
 ```
 * Prod:
 ```bash
-docker-compose up --build
+docker-compose up --build #fastapi, aiogram, postgres
 ```
 
 
