@@ -61,25 +61,6 @@ services:
       - app_network
     profiles: ["", "dev"]
 
-  pgadmin:
-    image: dpage/pgadmin4:8.12
-    container_name: pgadmin
-    restart: unless-stopped
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASS}
-      - PGADMIN_CONFIG_SERVER_MODE=False
-      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
-    ports:
-      - "8080:80"
-    depends_on:
-      - postgres
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin4/storage
-    networks:
-      - app_network
-    profiles: ["dev"]
-
 volumes:
   postgres_data:
   pgadmin_data:

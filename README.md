@@ -2,44 +2,47 @@
 
 Telegram bot for instant notifications about transactions on selected wallets. The bot utilizes webhooks from QuickNode and supports TRC20 and ERC20 wallets. It also allows users to query wallet balances (using QuickNode for ERC20 and Tronscan for TRC20).
 
+## Demo
+
+Here’s what a typical notification looks like:
+
+<img src="demo/tx_notification.png" width="350"/>
+
 ## Features
-* Supports TRC20/ERC20 wallets.
-* Wallet balance inquiries.
-* Webhook integration with QuickNode for transaction notifications.
-* PostgreSQL database.
+- Supports **ERC20** and **TRC20** wallets
+- Real-time transaction notifications via **QuickNode Webhooks**
+- Wallet balance inquiries via QuickNode (ERC20) and Tronscan (TRC20)
+- Integrated with **PostgreSQL** for data persistence
+- Built with **FastAPI**, **Aiogram**, and **Docker**
 
-## .env
-```
-#General
-MODE = The environment mode. Use PROD for production or DEV for development.
+## Architecture
 
-#Database
-DB_HOST = Hostname of the PostgreSQL server.
-DB_PORT = Port number for the PostgreSQL server.
-DB_USER = Username for the PostgreSQL database.
-DB_PASS = Password for the PostgreSQL database.
-DB_NAME = Name of the PostgreSQL database.
+- **Telegram Bot (Aiogram)** — user interaction
+- **FastAPI Backend** — receives webhooks and forwards alerts
+- **PostgreSQL** — stores user and wallet data
+- **QuickNode** — Ethereum/Tron blockchain events
+- **TronScan API** — TRC20 balance data
 
-#PgAdmin
-PGADMIN_EMAIL = Email address for the PgAdmin login.
-PGADMIN_PASS = Password for the PgAdmin login.
+## Environment Variables
 
-#Webhook
-WEBHOOK_BASE_URL = The base URL for the webhook (http://localhost:8000).
-
-#API Keys
-QUICKNODE_API_KEY = API key for QuickNode integration.
-QUICKNODE_ENDPOINT_URL = Endpoint URL for QuickNode. Add {chain} instead of blockchain name. (https://neat-proportionate-bush.{chain}.quiknode.pro/)
-TRONSCAN_API_KEY = API key for interacting with TronScan.
-
-#Telegram Bot
-TOKEN = Telegram Bot API token.
-```
+| Variable             | Description                                            |
+|----------------------|--------------------------------------------------------|
+| `MODE`               | `DEV` or `PROD` environment mode                       |
+| `DB_HOST`            | PostgreSQL host                                        |
+| `DB_PORT`            | PostgreSQL port                                        |
+| `DB_USER`            | PostgreSQL username                                    |
+| `DB_PASS`            | PostgreSQL password                                    |
+| `DB_NAME`            | PostgreSQL database name                               |
+| `WEBHOOK_BASE_URL`   | Base URL for receiving webhooks (e.g. http://localhost:8000) |
+| `QUICKNODE_API_KEY`  | API key for QuickNode                                  |
+| `QUICKNODE_ENDPOINT_URL` | QuickNode endpoint URL (use `{chain}` placeholder) |
+| `TRONSCAN_API_KEY`   | API key for Tronscan                                   |
+| `TOKEN`              | Telegram Bot API token                                 |
 
 ## Installation
 * Dev:
 ```bash
-docker-compose up --profile dev --build #postgres, pgadmin
+docker-compose up --profile dev --build #postgres
 poetry install && poetry shell
 python3 bot.py
 uvicorn main:app --debug
@@ -48,5 +51,3 @@ uvicorn main:app --debug
 ```bash
 docker-compose up --build #fastapi, aiogram, postgres
 ```
-
-
