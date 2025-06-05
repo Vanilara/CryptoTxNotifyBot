@@ -15,7 +15,11 @@ class BalanceGetterTRC(BaseRequestSender):
         super().__init__(
             base_url = settings.integrations.TRONSCAN_API_URL,
             base_headers={
+                "accept": "application/json",
                 'TRON-PRO-API-KEY': settings.integrations.TRONSCAN_API_KEY,
+                "User-Agent": "Mozilla/5.0",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Connection": "keep-alive"
             }
         )
 
@@ -23,6 +27,7 @@ class BalanceGetterTRC(BaseRequestSender):
         return [Request(
             method = HTTPMethod.GET,
             url = f'{self.base_url}/account/wallet',
+            headers=self.base_headers,
             params = {
                 'address': address,
                 'asset_type': '0'
