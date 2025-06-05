@@ -27,7 +27,7 @@ class TextMsgs:
         for balance in balances:
             message += f"<b>{balance.name}</b> - <i>{balance.network_user_name}</i>\n<pre>{balance.address}</pre>\n{balance.format_to_msg()}\n\n"
             sum_amount += balance.amount
-        message += f'<b>TOTAL: {sum_amount} USDT</b>'
+        message += f'<b>TOTAL: {round(sum_amount, 2)} USDT</b>'
         return message
     
     @staticmethod

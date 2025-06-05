@@ -14,15 +14,15 @@ class TransferDTO(BaseTranfer):
 
     @property
     def addresses(self) -> list[str]:
-        return [self.addr_from, self.addr_to]
+        return [self.addr_to, self.addr_from]
     
 class NotificationDTO(BaseTranfer):
     chat_ids: list[int]
     transfer_type: TransferType
     user_address: str
     other_address: str
-    balance: BalanceDTO
     wallet_name: str
+    time: str
 
     @property
     def other_wallet_role(self) -> str:

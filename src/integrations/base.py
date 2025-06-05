@@ -52,7 +52,7 @@ class BaseRequestSender(Loggable):
             json = request.json_payload, #It is needed to avoid pydantic warning
             **request.model_dump(exclude={"method", "json_payload"})
         )
-        self.logger.debug(f'Got {response.status} from {request.url}. {await response.json()}')
+        self.logger.debug(f'Got {response.status} from {request.url}. {await response.text}')
         data = await response.json()
         return ResponseWithRequest(
             data = data, status = response.status, request = request

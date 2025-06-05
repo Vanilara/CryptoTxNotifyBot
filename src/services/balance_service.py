@@ -5,7 +5,7 @@ from db.core.unit_of_work import UnitOfWork
 from core.networks import Networks
 from schemas.wallets import WalletDTO, BalanceDTO
 from integrations.wallets.balances_networks.erc import BalanceGetterERC
-from integrations.wallets.balances_networks.trc import BalanceGetterTRC
+from integrations.wallets.balances_networks.trc import BalanceGetterWithLockTRC
 from services.wallet_service import WalletService
 from utils.logger_setter import Loggable
 
@@ -30,7 +30,7 @@ class BalanceService(Loggable):
         erc_addresses = list(addresses_by_network[Networks.ERC20.value.abbr])
 
         trc_balances, erc_balances = await asyncio.gather(
-            BalanceGetterTRC().take_balances(trc_addresses),
+            BalanceGetterWithLockTRC().take_balances(trc_addresses),
             BalanceGetterERC().take_balances(erc_addresses),
         )
         balances = trc_balances + erc_balances

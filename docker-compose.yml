@@ -19,8 +19,8 @@ services:
     depends_on:
       - base
       - postgres
-    networks:
-      - app_network
+    network_mode: "host"
+    restart: unless-stopped
     profiles: [""]
 
   fastapi:
@@ -37,11 +37,10 @@ services:
       - PYTHONPATH=/app/src
     depends_on:
       - base
-    networks:
-      - app_network
+    network_mode: "host"
     ports:
-      - "5001:5001"
-    
+      - "8000:8000"
+    restart: unless-stopped
     profiles: [""]
 
   postgres:
@@ -58,7 +57,25 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app_network
-    profiles: ["", "dev"]
+    profiles: ["", "dev", "alembic"]
+
+  alembic:
+    build:
+      context: .
+      dockerfile: Dockerfile.alembic 
+    container_name: alembic
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+    networks:
+      - app_network
+    command: alembic upgrade head 
+    profiles: ["alembic"]
 
   pgadmin:
     image: dpage/pgadmin4:8.12
@@ -67,8 +84,6 @@ services:
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASS}
-      - PGADMIN_CONFIG_SERVER_MODE=False
-      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
     ports:
       - "8080:80"
     depends_on:
@@ -77,7 +92,7 @@ services:
       - pgadmin_data:/var/lib/pgadmin4/storage
     networks:
       - app_network
-    profiles: ["", "dev"]
+    profiles: ["dev"]
 
 volumes:
   postgres_data:

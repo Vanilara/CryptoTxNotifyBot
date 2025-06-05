@@ -50,7 +50,7 @@ class BalanceGetterTRC(BaseRequestSender):
     
     async def take_balances(self, addresses: list[str]) -> list[BalanceDTO]:
         requests = self._make_requests(addresses)
-        responses = await self._send_group_requests(requests, limit = 3)
+        responses = await self._send_group_requests(requests, limit = 1)
         results = [self._handle_response(response) for response in responses]
         return results
 
