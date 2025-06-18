@@ -2,14 +2,29 @@ services:
   base:
     build:
       context: .
-      dockerfile: Dockerfile.base
-    image: crypto-notifier-base
-    profiles: [""]
+      dockerfile: dockerfiles/Dockerfile.base
+    image: custom-base
+
+  postgres:
+    image: postgres:17.0
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    profiles: ["", "dev"]
 
   bot:
     build:
       context: .
-      dockerfile: Dockerfile.bot
+      dockerfile: dockerfiles/Dockerfile.bot
     container_name: bot
     volumes:
       - ./logs:/app/logs
@@ -19,14 +34,16 @@ services:
     depends_on:
       - base
       - postgres
-    network_mode: "host"
+      - fastapi
+    networks:
+      - app_network
     restart: unless-stopped
     profiles: [""]
 
   fastapi:
     build:
       context: .
-      dockerfile: Dockerfile.fastapi
+      dockerfile: dockerfiles/Dockerfile.fastapi
     container_name: fastapi
     volumes:
       - ./logs:/app/logs
@@ -36,67 +53,19 @@ services:
     environment:
       - PYTHONPATH=/app/src
     depends_on:
+      - postgres
       - base
-    network_mode: "host"
     ports:
       - "8000:8000"
     restart: unless-stopped
+    networks:
+      - app_network
+    command: >
+      sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"
     profiles: [""]
-
-  postgres:
-    image: postgres:17.0
-    container_name: postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_DB=${DB_NAME}
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app_network
-    profiles: ["", "dev", "alembic"]
-
-  alembic:
-    build:
-      context: .
-      dockerfile: Dockerfile.alembic 
-    container_name: alembic
-    depends_on:
-      - postgres
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - DB_NAME=${DB_NAME}
-    networks:
-      - app_network
-    command: alembic upgrade head 
-    profiles: ["alembic"]
-
-  pgadmin:
-    image: dpage/pgadmin4:8.12
-    container_name: pgadmin
-    restart: unless-stopped
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASS}
-    ports:
-      - "8080:80"
-    depends_on:
-      - postgres
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin4/storage
-    networks:
-      - app_network
-    profiles: ["dev"]
 
 volumes:
   postgres_data:
-  pgadmin_data:
 
 networks:
   app_network:

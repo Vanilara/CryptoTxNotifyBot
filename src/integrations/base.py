@@ -37,10 +37,7 @@ class BaseRequestSender(Loggable):
                 url = url,
                 **kwargs
             )
-        if response.headers['Content-Type'] == 'application/json':
-            self.logger.debug(f'Got {response.status} from {url}. {await response.json()}')
-        else:
-            self.logger.debug(f'Got {response.status} from {url}. {await response.text()}')
+        self.logger.debug(f'Got {response.status} for {url}')
         return response
     
     async def _send_batched_group_requests(
