@@ -16,13 +16,12 @@ class TransactionService(Loggable):
         self.uow = uow
         super().__init__()
 
-    async def handle_transactions(self, logs: dict, time_data: str):
-        transfers = self._parse_transaction_logs(logs['logs'])
+    async def handle_transactions(self, log: dict, time_data: str):
+        transfer = self._parse_transaction_logs(log)
         
-        for transfer in transfers:
-            if transfer.amount <= 1:
-                self.logger.info('Skip transfer cause of low amout')
-                continue
+        if transfer.amount <= 1:
+            self.logger.info('Skip transfer cause of low amout')
+        else:
             notifications = await self._handle_tranfser(
                 transfer, 
                 time = self._format_time(time_data)
@@ -66,30 +65,26 @@ class TransactionService(Loggable):
         return notifications
         
 
-    def _parse_transaction_logs(self, logs: dict) -> list[TransferDTO]:
-        transactions = []
-        for log in logs:
-            network = None
-            for item in Networks:
-                if item.value.smart_contract_address.lower() == log['address']:
-                    network = item.value
-            if network is None:
-                continue
-
-            converter = network.addresses_converter
-            transactions.append(TransferDTO(
-                network = network.abbr,
-                addr_from = converter.convert_from_evm(log['topics'][1]),
-                addr_to = converter.convert_from_evm(log['topics'][2]),
-                amount = round(EvmHasher.decode_int(log['data']) / 1000000, 2),
-                link = network.make_transaction_link(log['transactionHash'])
-            ))
-        self.logger.info(f'Parsed transfers: {transactions}')
-        if len(transactions) == 0:
-            self.logger.warning(f'Empty transactions fot from {logs}')
-        return transactions
+    def _parse_transaction_logs(self, log: dict) -> TransferDTO | None:
+        self.logger.info(log)
+        network = None
+        for item in Networks:
+            if item.value.smart_contract_address.lower() == log['address']:
+                network = item.value
+        if network is None:
+            return None
+        converter = network.addresses_converter
+        data = TransferDTO(
+            network = network.abbr,
+            addr_from = converter.convert_from_evm(log['topics'][1]),
+            addr_to = converter.convert_from_evm(log['topics'][2]),
+            amount = round(EvmHasher.decode_int(log['data']) / 1000000, 2),
+            link = network.make_transaction_link(log['transactionHash'])
+        )
+        self.logger.info(data)
+        return data
 
     def _format_time(self, data):
-        string = ' '.join(data.split(' ')[0:2]).split('.')[0]
-        time = datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
-        return datetime.strftime(time, '%-d %B %H:%M:%S')
+        ts = int(data)
+        dt = datetime.fromtimestamp(ts)
+        return dt.strftime('%-d %B %H:%M:%S')
