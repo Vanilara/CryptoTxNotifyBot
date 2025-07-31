@@ -37,10 +37,7 @@ class BaseRequestSender(Loggable):
                 url = url,
                 **kwargs
             )
-        if response.headers['Content-Type'] == 'application/json':
-            self.logger.debug(f'Got {response.status} from {url}. {await response.json()}')
-        else:
-            self.logger.debug(f'Got {response.status} from {url}. {await response.text()}')
+        self.logger.debug(f'Got {response.status} for {url}')
         return response
     
     async def _send_batched_group_requests(
@@ -49,10 +46,9 @@ class BaseRequestSender(Loggable):
         self.logger.debug(f"Sending {request}")
         response = await request.method.call(
             session,
-            json = request.json_payload, #It is needed to avoid pydantic warning
             **request.model_dump(exclude={"method", "json_payload"})
         )
-        self.logger.debug(f'Got {response.status} from {request.url}. {await response.json()}')
+        self.logger.debug(f'Got {response.status} from {request.url}. {await response.text()}')
         data = await response.json()
         return ResponseWithRequest(
             data = data, status = response.status, request = request

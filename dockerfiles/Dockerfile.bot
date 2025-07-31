@@ -1,3 +1,7 @@
+<<<<<<< HEAD
 FROM crypto-notifier-base as bot
+=======
+FROM custom-base as bot
+>>>>>>> c50d7fdb4e1c2392609900426450f992fd2f443c
 
 CMD ["poetry", "run", "python", "src/bot.py"]

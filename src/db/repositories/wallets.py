@@ -16,13 +16,6 @@ class WalletsRep(SQLAlchemyRepository[Wallets, WalletDTO]):
             delete(GroupWallets).filter_by(wallet_id = wallet_id)
         )
         await self.session.commit()
-
-    async def select_by_addresses(self, addresses: list[str]) -> list[WalletDTO]:
-        return await self._select_by_stmt(
-            select(self.model).filter(
-                or_(*[self.model.address.ilike(f'%{address}%') for address in addresses])
-            )
-        )
     
     async def select_by_address(self, address: str) -> list[WalletDTO]:
         return await self._select_by_stmt(

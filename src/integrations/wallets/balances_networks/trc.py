@@ -15,7 +15,11 @@ class BalanceGetterTRC(BaseRequestSender):
         super().__init__(
             base_url = settings.integrations.TRONSCAN_API_URL,
             base_headers={
+                "accept": "application/json",
                 'TRON-PRO-API-KEY': settings.integrations.TRONSCAN_API_KEY,
+                "User-Agent": "Mozilla/5.0",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Connection": "keep-alive"
             }
         )
 
@@ -23,6 +27,7 @@ class BalanceGetterTRC(BaseRequestSender):
         return [Request(
             method = HTTPMethod.GET,
             url = f'{self.base_url}/account/wallet',
+            headers=self.base_headers,
             params = {
                 'address': address,
                 'asset_type': '0'
@@ -50,7 +55,7 @@ class BalanceGetterTRC(BaseRequestSender):
     
     async def take_balances(self, addresses: list[str]) -> list[BalanceDTO]:
         requests = self._make_requests(addresses)
-        responses = await self._send_group_requests(requests, limit = 3)
+        responses = await self._send_group_requests(requests, limit = 1)
         results = [self._handle_response(response) for response in responses]
         return results
 

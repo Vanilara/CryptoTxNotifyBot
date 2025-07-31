@@ -97,12 +97,7 @@ class WalletService(Loggable):
         webhook_service = WebhookService(network)
         addresses = await self.get_addresses_by_network(network)
         addresses.remove(address)
-        if len(addresses) == 0:
-            try:
-                await webhook_service.delete_webhook()
-            except NoSuchWebhook:
-                self.logger.warning(f'Tried to remove address {address}, but there is not webhook')
-        else:
+        if len(addresses) != 0:
             await webhook_service.update_webhook_addresses(addresses)
 
     async def get_addresses_by_network(self, network: Network) -> list[str]:

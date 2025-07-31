@@ -3,8 +3,26 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.base
+<<<<<<< HEAD:docker-compose.yaml
     image: crypto-notifier-base
     profiles: [""]
+=======
+    image: custom-base
+
+  postgres:
+    image: postgres:17.0
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    profiles: ["", "dev"]
+>>>>>>> c50d7fdb4e1c2392609900426450f992fd2f443c:docker-compose.yml
 
   bot:
     build:
@@ -20,8 +38,10 @@ services:
     depends_on:
       - base
       - postgres
+      - fastapi
     networks:
       - app_network
+    restart: unless-stopped
     profiles: [""]
 
   fastapi:
@@ -38,6 +58,7 @@ services:
     environment:
       - PYTHONPATH=/app/src
     depends_on:
+<<<<<<< HEAD:docker-compose.yaml
       - base
     networks:
       - app_network
@@ -60,10 +81,19 @@ services:
     networks:
       - app_network
     profiles: ["", "dev"]
+=======
+      - postgres
+      - base
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - app_network
+    profiles: [""]
+>>>>>>> c50d7fdb4e1c2392609900426450f992fd2f443c:docker-compose.yml
 
 volumes:
   postgres_data:
-  pgadmin_data:
 
 networks:
   app_network:

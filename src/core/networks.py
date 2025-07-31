@@ -12,6 +12,7 @@ class Network(BaseModel):
     smart_contract_address: str
     addresses_converter: type[AbstractConverter]
     link_scaner: str
+    scaner_name: str
 
     def make_transaction_link(self, hash: str) -> str:
         if self.abbr == Networks.TRC20.value.abbr:
@@ -26,7 +27,8 @@ class Networks(Enum):
         endpoint_quicknode_path = '.tron-mainnet',
         smart_contract_address = '0xA614F803B6FD780986A42C78EC9C7F77E6DED13C',
         addresses_converter = TRC20Converter,
-        link_scaner = 'https://tronscan.org/#/transaction/'
+        link_scaner = 'https://tronscan.org/#/transaction/',
+        scaner_name = 'Tronscan'
     )
     ERC20 = Network(
         abbr = 'ERC',
@@ -35,7 +37,8 @@ class Networks(Enum):
         endpoint_quicknode_path = '',
         smart_contract_address = '0xdAC17F958D2ee523a2206206994597C13D831ec7',
         addresses_converter = ERC20Converter,
-        link_scaner = 'https://etherscan.io/tx/'
+        link_scaner = 'https://etherscan.io/tx/',
+        scaner_name = 'Etherscan'
     )
 
     @classmethod

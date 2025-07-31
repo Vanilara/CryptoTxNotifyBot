@@ -18,7 +18,8 @@ async def test_post(request: Request):
     transaction_service = TransactionService(UnitOfWork())
     for transaction in await request.json():
         try:
-            await transaction_service.handle_transactions(transaction)
+            time_data = request.headers.get('x-qn-timestamp')
+            await transaction_service.handle_transactions(transaction, time_data)
         except Exception as e:
             logging.error("An error occurred while handling transactions", exc_info=True)
     return 'OK'

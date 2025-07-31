@@ -1,3 +1,4 @@
+from datetime import datetime
 from core.networks import Networks
 from core.enums import TransferType
 from schemas.wallets import BalanceDTO
@@ -15,33 +16,36 @@ class TransactionService(Loggable):
         self.uow = uow
         super().__init__()
 
-    async def handle_transactions(self, logs: dict):
+    async def handle_transactions(self, logs: dict, time_data: str):
         transfers = self._parse_transaction_logs(logs['logs'])
-        balances = await self._get_transaction_balances(transfers)
         
         for transfer in transfers:
-            notifications = await self._handle_tranfser(transfer, balances)
-            self.logger.info(f'Notifications: {notifications}')
+            if transfer.amount <= 1:
+                self.logger.info('Skip transfer cause of low amout')
+                continue
+            notifications = await self._handle_tranfser(
+                transfer, 
+                time = self._format_time(time_data)
+            )
             for notification in notifications:
                 await TransactionSender().handle_notifications(notification)
-        return notifications
 
     async def _handle_tranfser(
-        self, transfer: TransferDTO, balances: list[BalanceDTO]
+        self, transfer: TransferDTO, time: str
     ) -> list[NotificationDTO]:
         notifications = []
-        for address, transfer_type in zip(transfer.addresses, TransferType):
-            self.logger.info(f'Checking {transfer_type}, {address}')
+        wallets_all_in_transaction = []
+        for address, transfer_type in zip((transfer.addr_to, transfer.addr_from), TransferType):
             if transfer_type == TransferType.Receive:
                 user_address, other_address = transfer.addr_to, transfer.addr_from
             elif transfer_type == TransferType.Send:
                 user_address, other_address = transfer.addr_from, transfer.addr_to,
             async with self.uow as uow:
                 wallets = await uow.wallets.select_by_address(address)
-                for wallet in wallets:
+                wallets_all_in_transaction += wallets
+                for wallet in filter(lambda x: x.has_notifications, wallets):
                     self.logger.info(f'Found in DB {wallet}')
                     wallet_groups = await uow.wallets.get_wallet_groups_ids(wallet.id)
-                    balance = list(filter(lambda x: x.address == wallet.address, balances))[0]
                     notifications.append(NotificationDTO(
                         chat_ids = wallet_groups + [wallet.user_id],
                         transfer_type = transfer_type,
@@ -50,22 +54,17 @@ class TransactionService(Loggable):
                         user_address = user_address,
                         other_address = other_address,
                         link = transfer.link,
-                        balance = balance,
-                        wallet_name = wallet.name
+                        wallet_name = wallet.name,
+                        time = time
                     ))
+        if len(wallets_all_in_transaction) == 0:
+            self.logger.warning('No wallet with this transaction')
+        elif len(notifications) == 0:
+            self.logger.info('All wallets in transaction are set_notifs = False')
+        else:
+            self.logger.info(f'Notifications: {notifications}')
         return notifications
         
-    async def _get_transaction_balances(
-        self, transfers: list[TransferDTO]
-    ) -> list[BalanceDTO]:
-        async with self.uow as uow:
-            wallets = await uow.wallets.select_by_addresses(
-                addresses = [address for transfer in transfers for address in transfer.addresses]
-            )
-        self.logger.info(f'Wallets from transfer exist in DB: {wallets}')
-        balances = await BalanceService(self.uow).get_balances(wallets)
-        self.logger.info(f'Balances of exists wallets: {balances}')
-        return balances
 
     def _parse_transaction_logs(self, logs: dict) -> list[TransferDTO]:
         transactions = []
@@ -89,3 +88,8 @@ class TransactionService(Loggable):
         if len(transactions) == 0:
             self.logger.warning(f'Empty transactions fot from {logs}')
         return transactions
+
+    def _format_time(self, data):
+        string = ' '.join(data.split(' ')[0:2]).split('.')[0]
+        time = datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+        return datetime.strftime(time, '%-d %B %H:%M:%S')
