@@ -13,8 +13,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -60,8 +58,6 @@ services:
     restart: unless-stopped
     networks:
       - app_network
-    command: >
-      sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"
     profiles: [""]
 
 volumes:

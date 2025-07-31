@@ -55,6 +55,7 @@ class AlertsManager(BaseRequestSender):
                 'network': self.network.quicknode_name,
             }
         )
+        self.logger.debug(f'Validated: {await response.text()}')
         return True if await response.text() == 'true' else False
 
     async def update(self, alert_id: str, expression: str) -> None:
@@ -67,4 +68,3 @@ class AlertsManager(BaseRequestSender):
         )
         if response.status == 404:
             raise NoSuchAlert
-        data = await response.json()
